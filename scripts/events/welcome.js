@@ -29,7 +29,7 @@ module.exports = {
     welcomeMessage: "🕶️ Merci de m’avoir invoqué dans l’ombre du groupe.\n➤ Préfixe : %1\n➤ Commandes : %1help",
     multiple1: "toi, l’élu",
     multiple2: "vous, âmes invitées",
-    defaultWelcomeMessage: `☠️ Yo {userName},\nBienvenue à {multiple} dans l’antre : {boxName}\nQue ta {session} soit marquée par la puissance. 🔥`
+    defaultWelcomeMessage: `☠️ Yo {userName},\nBienvenue à {multiple} dans l’antre : {boxName}\nQue ta/ton {session} soit marquée par la puissance. 🔥`
 }
 	},
 
