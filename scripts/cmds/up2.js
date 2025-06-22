@@ -1,78 +1,113 @@
-const axios = require("axios");
+const os = require("os");
 const fs = require("fs-extra");
-const path = require("path");
+
+const startTime = new Date(); // Moved outside onStart
 
 module.exports = {
   config: {
     name: "uptime",
-    aliases: ["up2"],
-    version: "1.0",
-    author: "Raphael", //Don't change Author 
+    aliases: ["up"],
+    author: "ArYAN",
+    countDown: 0,
     role: 0,
-    shortDescription: {
-      en: "Displays the uptime of the bot."
-    },
+    category: "system",
     longDescription: {
-      en: "Displays the amount of time that the bot has been running for."
+      en: "Get System Information",
     },
-    category: "utility",
-    guide: {
-      en: "Use {p}uptime to display the uptime of the bot."
+  },
+
+  onStart: async function ({ api, event, args, threadsData, usersData }) {
+    try {
+      const uptimeInSeconds = (new Date() - startTime) / 1000;
+
+      const seconds = uptimeInSeconds;
+      const days = Math.floor(seconds / (3600 * 24));
+      const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secondsLeft = Math.floor(seconds % 60);
+      const uptimeFormatted = `${days}d ${hours}h ${minutes}m ${secondsLeft}s`;
+
+      const loadAverage = os.loadavg();
+      const cpuUsage =
+        os
+          .cpus()
+          .map((cpu) => cpu.times.user)
+          .reduce((acc, curr) => acc + curr) / os.cpus().length;
+
+      const totalMemoryGB = os.totalmem() / 1024 ** 3;
+      const freeMemoryGB = os.freemem() / 1024 ** 3;
+      const usedMemoryGB = totalMemoryGB - freeMemoryGB;
+
+      const allUsers = await usersData.getAll();
+      const allThreads = await threadsData.getAll();
+      const currentDate = new Date();
+      const options = { year: "numeric", month: "numeric", day: "numeric" };
+      const date = currentDate.toLocaleDateString("en-US", options);
+      const time = currentDate.toLocaleTimeString("en-US", {
+        timeZone: "Asia/Kolkata",
+        hour12: true,
+      });
+
+      const timeStart = Date.now();
+      await api.sendMessage({
+        body: "🔎| checking........",
+      }, event.threadID);
+
+      const ping = Date.now() - timeStart;
+
+      let pingStatus = "⛔| 𝖡𝖺𝖽 𝖲𝗒𝗌𝗍𝖾𝗆";
+      if (ping < 1000) {
+        pingStatus = "✅| 𝖲𝗆𝗈𝗈𝗍𝗁 𝖲𝗒𝗌𝗍𝖾𝗆";
+      }
+      const systemInfo = `♡   ∩_∩
+ （„• ֊ •„)♡
+╭─∪∪────────────⟡
+│ 𝗨𝗣𝗧𝗜𝗠𝗘 𝗜𝗡𝗙𝗢
+├───────────────⟡
+│ ⏰ 𝗥𝗨𝗡𝗧𝗜𝗠𝗘
+│  ${uptimeFormatted}
+├───────────────⟡
+│ 👑 𝗦𝗬𝗦𝗧𝗘𝗠 𝗜𝗡𝗙𝗢
+│𝙾𝚂: ${os.type()} ${os.arch()}
+│𝙻𝙰𝙽𝙶 𝚅𝙴𝚁: ${process.version}
+│𝙲𝙿𝚄 𝙼𝙾𝙳𝙴𝙻: ${os.cpus()[0].model}
+│𝚂𝚃𝙾𝚁𝙰𝙶𝙴: ${usedMemoryGB.toFixed(2)} GB / ${totalMemoryGB.toFixed(2)} GB
+│𝙲𝙿𝚄 𝚄𝚂𝙰𝙶𝙴: ${cpuUsage.toFixed(1)}%
+│𝚁𝙰𝙼 𝚄𝚂𝙶𝙴: ${process.memoryUsage().heapUsed / 1024 / 1024} MB;
+├───────────────⟡
+│ ✅ 𝗢𝗧𝗛𝗘𝗥 𝗜𝗡𝗙𝗢
+│𝙳𝙰𝚃𝙴: ${date}
+│𝚃𝙸𝙼𝙴: ${time}
+│𝚄𝚂𝙴𝚁𝚂: ${allUsers.length}
+│𝚃𝙷𝚁𝙴𝙰𝙳𝚂: ${allThreads.length}
+│𝙿𝙸𝙽𝙶: ${ping}𝚖𝚜
+│𝚂𝚃𝙰𝚃𝚄𝚂: ${pingStatus}
+╰───────────────⟡
+`;
+
+      api.sendMessage(
+        {
+          body: systemInfo,
+        },
+        event.threadID,
+        (err, messageInfo) => {
+          if (err) {
+            console.error("Error sending message with attachment:", err);
+          } else {
+            console.log(
+              "Message with attachment sent successfully:",
+              messageInfo,
+            );
+          }
+        },
+      );
+    } catch (error) {
+      console.error("Error retrieving system information:", error);
+      api.sendMessage(
+        "Unable to retrieve system information.",
+        event.threadID,
+        event.messageID,
+      );
     }
   },
-  onStart: async function ({ api, event, args }) {
-    try {
-      // Calculate uptime
-      const uptime = process.uptime();
-      const secondsLeft = Math.floor(uptime % 60);
-      const minutes = Math.floor((uptime / 60) % 60);
-      const hours = Math.floor((uptime / (60 * 60)) % 24);
-      const days = Math.floor(uptime / (60 * 60 * 24));
-      const uptimeString = `${days} 𝙳𝚊𝚢𝚜 ${hours} 𝙷𝚘𝚞𝚛𝚜 ${minutes} 𝙼𝚒𝚗𝚞𝚝𝚎𝚜 ${secondsLeft} 𝚂𝚎𝚌𝚘𝚗𝚍𝚜`;
-
-      // Bot information
-      const botname = "  ZetBot"; // Replace with your actual bot name
-      const insta = "YazidDiz95"; // Replace with your Instagram handle
-      const github = "YazidGit"; // Replace with your GitHub handle
-      const fb = "Zetsu"; // Replace with your Facebook handle
-
-      // Prepare the API URL for image generation
-      const apiUrl = `https://deku-rest-api.gleeze.com/canvas/uptime?id=4&instag=${insta}&ghub=${github}&fb=${fb}&hours=${hours}&minutes=${minutes}&seconds=${secondsLeft}&botname=${botname}`;
-
-      
-      const tempDir = './temp';
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir);
-      }
-
-      const attachmentPath = path.join(tempDir, `uptime_${event.senderID}.png`);
-
-      // Fetch the image from the API
-      const response = await axios.get(apiUrl, { responseType: 'stream' });
-      const writer = fs.createWriteStream(attachmentPath);
-      response.data.pipe(writer);
-
-  
-      writer.on('finish', async () => {
-        const message = `𝗛𝗲𝗹𝗹𝗼 𝗠𝗮𝘀𝘁𝗲𝗿~ 🐼,\n\n 🫶 𝙔𝙤𝙪𝙧 𝙗𝙤𝙩 𝙞𝙨 𝙧𝙪𝙣𝙣𝙞𝙣𝙜 𝙛𝙧𝙤𝙢\n\n ${uptimeString}.`;
-
-        await api.sendMessage({
-          body: message,
-          attachment: fs.createReadStream(attachmentPath)
-        }, event.threadID, () => {
-          fs.unlinkSync(attachmentPath);
-        });
-      });
-
-      // Handle errors during the writing process
-      writer.on('error', (err) => {
-        console.error("Error writing the file:", err);
-        api.sendMessage("Unable to retrieve uptime image. Error: " + err.message, event.threadID);
-      });
-
-    } catch (error) {
-      console.error("Error in uptime command:", error);
-      api.sendMessage("Unable to display uptime information.", event.threadID);
-    }
-  }
 };
