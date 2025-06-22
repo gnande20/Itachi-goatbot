@@ -21,16 +21,16 @@ module.exports = {
 			multiple2: "các bạn",
 			defaultWelcomeMessage: "Xin chào {userName}.\nChào mừng bạn đến với {boxName}.\nChúc bạn có buổi {session} vui vẻ!"
 		},
-		en: {
-			session1: "morning",
-			session2: "noon",
-			session3: "afternoon",
-			session4: "evening",
-			welcomeMessage: "Thank you for inviting me to the group!\nBot prefix: %1\nTo view the list of commands, please enter: %1help",
-			multiple1: "you",
-			multiple2: "you guys",
-			defaultWelcomeMessage: `Yo salut {userName}.\nBienvenue {multiple} dans le groupe: {boxName}\nPasse une bonne {session} 🎯`
-		}
+		fr: {
+    session1: "matin",
+    session2: "midi",
+    session3: "après-midi",
+    session4: "soirée",
+    welcomeMessage: "🕶️ Merci de m’avoir invoqué dans l’ombre du groupe.\n➤ Préfixe : %1\n➤ Commandes : %1help",
+    multiple1: "toi, l’élu",
+    multiple2: "vous, âmes invitées",
+    defaultWelcomeMessage: `☠️ Yo {userName},\nBienvenue à {multiple} dans l’antre : {boxName}\nQue ta {session} soit marquée par la puissance. 🔥`
+}
 	},
 
 	onStart: async ({ threadsData, message, event, api, getLang }) => {
