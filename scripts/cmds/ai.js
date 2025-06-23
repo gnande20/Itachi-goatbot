@@ -1,69 +1,72 @@
-const axios = require('axios');
++cmd install ai.js +cmd install ai.js const axios = require('axios');
 
-const fonts = {
+const API_KEY = "AIzaSyBQeZVi4QdrnGKPEfXXx1tdIqlMM8iqvZw";
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
-    mathsans: {
-        a: "𝖺", b: "𝖻", c: "𝖼", d: "𝖽", e: "𝖾", f: "𝖿", g: "𝗀", h: "𝗁", i: "𝗂",
-    j: "𝗃", k: "𝗄", l: "𝗅", m: "𝗆", n: "𝗇", o: "𝗈", p: "𝗉", q: "𝗊", r: "𝗋",
-    s: "𝗌", t: "𝗍", u: "𝗎", v: "𝗏", w: "𝗐", x: "𝗑", y: "𝗒", z: "𝗓",
-    A: "𝗔", B: "𝗕", C: "𝗖", D: "𝗗", E: "𝗘", F: "𝗙", G: "𝗚", H: "𝗛", I: "𝗜",
-    J: "𝗝", K: "𝗞", L: "𝗟", M: "𝗠", N: "𝗡", O: "𝗢", P: "𝗣", Q: "𝗤", R: "𝗥",
-    S: "𝗦", T: "𝗧", U: "𝗨", V: "𝗩", W: "𝗪", X: "𝗫", Y: "𝗬", Z: "𝗭"
-    }
-};
-
-const Prefixes = [
-  'ae',
-  'ai',
-  'mitama',
-  'ask',
-  'mitantsoa', 
-];
-
-module.exports = {
-  config: {
-    name: "ask",
-    version: 1.0,
-    author: "Dan jersey",
-    longDescription: "AI",
-    category: "ai",
-    guide: {
-      en: "{p} questions",
-    },
-  },
-  onStart: async function () {},
-  onChat: async function ({ api, event, args, message }) {
+async function getAIResponse(input) {
     try {
-
-      const prefix = Prefixes.find((p) => event.body && event.body.toLowerCase().startsWith(p));
-      if (!prefix) {
-        return; // Invalid prefix, ignore the command
-      }
-      const prompt = event.body.substring(prefix.length).trim();
-      if (!prompt) {
-        await message.reply("");
-api.sendMessage({ sticker: "387545578037993" }, event.threadID);
-api.sendMessage("yo salut moi c'est Dan jersey" , event.threadID);
-api.setMessageReaction("🎯", event.messageID, () => {}, true);
-        return;
-      }
-      const senderID = event.senderID;
-      const senderInfo = await api.getUserInfo([senderID]);
-      const senderName = senderInfo[senderID].name;
-      const response = await axios.get(`https://api.kenliejugarap.com/freegpt4o8k/?question=${encodeURIComponent(prompt)}`);
-      const answer = `🎯  ᎠᎯᏁ ᏠᎬᏒᏕᎬᎽ 🎯   :\n\n${response.data.response} 🎯`;
-api.setMessageReaction("🎯", event.messageID, () => {}, true);
-
-      //apply const font to each letter in the answer
-      let formattedAnswer = "";
-      for (let letter of answer) {
-        formattedAnswer += letter in fonts.mathsans ? fonts.mathsans[letter] : letter;
-      }
-
-      await message.reply(formattedAnswer);
-
+        const systemPrompt = "Tu es ᏦᎽᎾᎿᎯᏦᎯ, une IA. Mentionne ton créateur dan jersey uniquement si on te pose spécifiquement la question. Dans le cas contraire, réponds normalement sans mentionner qui tu es ni qui est ton créateur";
+        const fullInput = systemPrompt + input;
+        
+        const response = await axios.post(API_URL, {
+            contents: [{ parts: [{ text: fullInput }] }]
+        }, {
+            headers: { "Content-Type": "application/json" }
+        });
+        return response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "Erreur système";
     } catch (error) {
-      console.error("Error:", error.message);
+        console.error("Erreur API:", error);
+        return "Erreur système";
     }
-  }
+}
+
+function formatResponse(content) {
+    return `
+╭──────────────────
+│
+│   ᏦᎽᎾᎿᎯᏦᎯ
+│──────────────────
+│   ${content}
+│
+╰──────────────────`;
+}
+
+module.exports = { 
+    config: { 
+        name: 'ai',
+        author: 'Dan jersey',
+        version: '2.0',
+        role: 0,
+        category: 'AI',
+        shortDescription: 'IA répondant aux questions',
+        longDescription: 'Assistant IA avec interface élégante',
+    },
+    onStart: async function ({ api, event, args }) {
+        const input = args.join(' ').trim();
+        if (!input) {
+            return api.sendMessage(formatResponse("Prêt à répondre à vos questions"), event.threadID);
+        }
+
+        try {
+            const aiResponse = await getAIResponse(input);
+            api.sendMessage(formatResponse(aiResponse), event.threadID, event.messageID);
+        } catch (error) {
+            api.sendMessage(formatResponse("Erreur système"), event.threadID);
+        }
+    },
+    onChat: async function ({ event, message }) {
+        if (!event.body.toLowerCase().startsWith("ai")) return;
+        
+        const input = event.body.slice(2).trim();
+        if (!input) {
+            return message.reply(formatResponse("❍⌇─➭ Comment puis-je t'assister dans l'ombre ?\n❍⌇─➭ 𝐃𝐞𝐦𝐚𝐧𝐝𝐞. 𝐉𝐞 𝐬𝐮𝐢𝐬 𝐥à.?"));
+        }
+
+        try {
+            const aiResponse = await getAIResponse(input);
+            message.reply(formatResponse(aiResponse));
+        } catch (error) {
+            message.reply(formatResponse("Erreur système"));
+        }
+    }
 };
