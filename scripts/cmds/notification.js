@@ -31,7 +31,10 @@ module.exports = {
 		},
 		en: {
 			missingMessage: "Entrez, cher Maître Créateur,le message à envoyer aux groupes...",
-			notification: "Notification from admin bot to all chat groups (do not reply to this message)",
+			notification: "╭─❍ Notification Globale ─╮
+│ 📢 Message du bot admin        │
+│ 🚫 Ne répondez pas à ce msg  │
+╰─────────────────╯",
 			sendingNotification: "Start sending notification from admin bot to %1 chat groups",
 			sentNotification: "✅ Sent notification to %1 groups successfully",
 			errorSendingNotification: "An error occurred while sending to %1 groups:\n%2"
