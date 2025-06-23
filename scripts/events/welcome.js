@@ -21,7 +21,7 @@ module.exports = {
 			multiple2: "các bạn",
 			defaultWelcomeMessage: "Xin chào {userName}.\nChào mừng bạn đến với {boxName}.\nChúc bạn có buổi {session} vui vẻ!"
 		},
-		fr: {
+		en: {
     session1: "matin",
     session2: "midi",
     session3: "après-midi",
