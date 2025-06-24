@@ -59,7 +59,7 @@ module.exports = {
         
         const input = event.body.slice(2).trim();
         if (!input) {
-            return message.reply(formatResponse("❍⌇─➭ Comment puis-je t'assister dans l'ombre ?\n❍⌇─➭ 𝐃𝐞𝐦𝐚𝐧𝐝𝐞. 𝐉𝐞 𝐬𝐮𝐢𝐬 𝐥à.?"));
+            return message.reply(formatResponse("❍⌇─➭ Comment puis-je t'assister dans l'ombre ?\n❍⌇─➭ 𝐃𝐞𝐦𝐚𝐧𝐝𝐞. 𝐉𝐞 𝐬𝐮𝐢𝐬 𝐥à!"));
         }
 
         try {
