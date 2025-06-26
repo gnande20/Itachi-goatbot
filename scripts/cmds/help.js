@@ -13,16 +13,16 @@ module.exports = {
     countDown: 5,
     role: 0,
     shortDescription: {
-      en: "View command usage and list all commands directly",
+      en: "View command usage and list all commands directly"
     },
     longDescription: {
-      en: "View command usage and list all commands directly",
+      en: "View command usage and list all commands directly"
     },
     category: "cmd-list",
     guide: {
-      en: "{pn} / help cmdName",
+      en: "{pn} / help cmdName"
     },
-    priority: 1,
+    priority: 1
   },
 
   onStart: async function ({ message, args, event, threadsData, role }) {
@@ -44,7 +44,7 @@ module.exports = {
       }
 
       Object.keys(categories).forEach((category) => {
-        msg += `\n╭━✷${category.toUpperCase()}✷╮\n`;
+        msg += `\n╭━✷${category.toUpperCase()}✷\n`;
         const names = categories[category].commands.sort();
         for (let i = 0; i < names.length; i += 3) {
           const cmds = names.slice(i, i + 3).map((item) => `★${item}`);
@@ -60,7 +60,7 @@ module.exports = {
       msg += `Admin : ᎠᎯᏁ ᏠᎬᏒᏕᎬᎽ\n\n`;
 
       await message.reply({
-        body: msg,
+        body: msg
       });
 
     } else {
@@ -73,9 +73,9 @@ module.exports = {
         const configCommand = command.config;
         const roleText = roleTextToString(configCommand.role);
         const author = configCommand.author || "Unknown";
-        const category = configCommand.category;
+        const category = configCommand.category || "Uncategorized";
         const longDescription = configCommand.longDescription ? configCommand.longDescription.en || "No description" : "No description";
-        const guideBody = configCommand.guide?.en || "No guide available.";
+        const guideBody = String(configCommand.guide?.en || "No guide available.");
         const usage = guideBody.replace(/{p}/g, prefix).replace(/{n}/g, configCommand.name);
 
         const response = `╭─❍ ᏦᎽᎾᎿᎯᏦᎯ ❍─╮      
@@ -95,7 +95,7 @@ module.exports = {
         await message.reply(response);
       }
     }
-  },
+  }
 };
 
 function roleTextToString(roleText) {
