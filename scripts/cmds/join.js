@@ -2,7 +2,7 @@ module.exports = {
   config: {
     name: "join",
     version: "1.0",
-    author: "Blẳȼk Il",
+    author: "Dan jersey",
     role: 0,
     shortDescription: "Être ajouté à un groupe par le bot",
     longDescription: "Permet uniquement à l'administrateur de se faire ajouter à un groupe via son TID (Thread ID).",
