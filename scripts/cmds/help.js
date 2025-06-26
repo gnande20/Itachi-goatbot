@@ -3,126 +3,110 @@ const axios = require("axios");
 const path = require("path");
 const { getPrefix } = global.utils;
 const { commands, aliases } = global.GoatBot;
-const doNotDelete = "╭─⌾𝙱𝙾𝚃 𝙿𝙰𝙶𝙴  ⋅⌾──╮\n│\n│ https://www.facebook.com/profile.php?id=61577867905683 \n│\n╰─────────────⌾";
-
-function applyFont(text) {
-  const fontMap = {
-    'A': '𝙰', 'B': '𝙱', 'C': '𝙲', 'D': '𝙳', 'E': '𝙴', 'F': '𝙵',
-    'G': '𝙶', 'H': '𝙷', 'I': '𝙸', 'J': '𝙹', 'K': '𝙺', 'L': '𝙻',
-    'M': '𝙼', 'N': '𝙽', 'O': '𝙾', 'P': '𝙿', 'Q': '𝚀', 'R': '𝚁',
-    'S': '𝚂', 'T': '𝚃', 'U': '𝚄', 'V': '𝚅', 'W': '𝚆', 'X': '𝚇',
-    'Y': '𝚈', 'Z': '𝚉',
-    'a': '𝚊', 'b': '𝚋', 'c': '𝚌', 'd': '𝚍', 'e': '𝚎', 'f': '𝚏',
-    'g': '𝚐', 'h': '𝚑', 'i': '𝚒', 'j': '𝚓', 'k': '𝚔', 'l': '𝚕',
-    'm': '𝚖', 'n': '𝚗', 'o': '𝚘', 'p': '𝚙', 'q': '𝚚', 'r': '𝚛',
-    's': '𝚜', 't': '𝚝', 'u': '𝚞', 'v': '𝚟', 'w': '𝚠', 'x': '𝚡',
-    'y': '𝚢', 'z': '𝚣'
-  };
-  return text.split('').map(char => fontMap[char] || char).join('');
-}
+const doNotDelete = "╭─❍ ᏦᎽᎾᎿᎯᏦᎯ ❍─╮";
 
 module.exports = {
   config: {
     name: "help",
-    version: "1.2",
+    version: "1.17",
     author: "Dan jersey",
     countDown: 5,
     role: 0,
     shortDescription: {
-      en: "View command usage and list"
+      en: "View command usage and list all commands directly",
     },
     longDescription: {
-      en: "View detailed command usage and list all available commands"
+      en: "View command usage and list all commands directly",
     },
-    category: "info",
+    category: "cmd-list",
     guide: {
-      en: "{pn} [command_name]"
+      en: "{pn} / help cmdName",
     },
-    priority: 1
+    priority: 1,
   },
 
   onStart: async function ({ message, args, event, threadsData, role }) {
     const { threadID } = event;
-    const prefix = await getPrefix(threadID);
+    const threadData = await threadsData.get(threadID);
+    const prefix = getPrefix(threadID);
 
     if (args.length === 0) {
       const categories = {};
-      let msg = ╭─⌾${applyFont("COMMAND LIST")}⋅⌾──╮\n│\n│  ${applyFont("KYOTAKA BOT")}\n│\n╰─────────────⌾\n;
+      let msg = "";
+
+      msg += `\n\n╭─〔 🎯 ᴅᴀɴ ᴊᴇʀꜱᴇʏ 🎯 〕─╮\n\n`;
 
       for (const [name, value] of commands) {
-        if (value.config.role > role) continue;
-        const category = value.config.category || "NO CATEGORY";
-        if (!categories[category]) {
-          categories[category] = { commands: [] };
-        }
+        if (value.config.role > 1 && role < value.config.role) continue;
+        const category = value.config.category || "Uncategorized";
+        if (!categories[category]) categories[category] = { commands: [] };
         categories[category].commands.push(name);
       }
 
-      Object.keys(categories).sort().forEach(category => {
-        const formattedCategory = applyFont(category.toUpperCase());
-        msg += ╭─⌾${formattedCategory}⋅⌾──╮\n│\n;
-
-        categories[category].commands.sort().forEach(name => {
-          msg += │ ✦ ${applyFont(name)}\n;
-        });
-
-        msg += │\n╰─────────────⌾\n;
+      Object.keys(categories).forEach((category) => {
+        msg += `\n╭━✷${category.toUpperCase()}✷╮\n`;
+        const names = categories[category].commands.sort();
+        for (let i = 0; i < names.length; i += 3) {
+          const cmds = names.slice(i, i + 3).map((item) => `★${item}`);
+          msg += `│ ${cmds.join('   ')}\n`;
+        }
+        msg += `╰────────────✷\n`;
       });
 
       const totalCommands = commands.size;
-      msg += ╭─⌾${applyFont("INFORMATION")}⋅⌾──╮\n│\n;
-      msg += │ ${applyFont("TOTAL COMMANDS")}: ${totalCommands}\n;
-      msg += │ ${applyFont("PREFIX")}: ${prefix}\n;
-      msg += │\n│ ${applyFont("Type")} ${prefix}help cmd_name\n;
-      msg += │ ${applyFont("to view command details")}\n│\n;
-      msg += ╰─────────────⌾\n;
-      msg += doNotDelete;
+      msg += `\nᏦᎽᎾᎿᎯᏦᎯ 𝐁𝐨𝐭 𝐡𝐚𝐬 ${totalCommands} 𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐬 ✔\n`;
+      msg += `${prefix}𝐡𝐞𝐥𝐩 𝐭𝐨 𝐥𝐨𝐨𝐤 𝐜𝐦𝐝𝐬\n`;
+      msg += `𝐀𝐧𝐲 𝐩𝐫𝐨𝐛𝐥𝐞𝐦 𝐫𝐞𝐥𝐚𝐭𝐞𝐝 𝐭𝐨 𝐛𝐨𝐭 𝐭𝐡𝐞𝐧 𝐮𝐬𝐞 ${prefix}𝐜𝐚𝐥𝐥𝐚𝐝\n`;
+      msg += `Admin : ᎠᎯᏁ ᏠᎬᏒᏕᎬᎽ\n\n`;
 
-      await message.reply({ body: msg });
+      await message.reply({
+        body: msg,
+      });
+
     } else {
       const commandName = args[0].toLowerCase();
       const command = commands.get(commandName) || commands.get(aliases.get(commandName));
 
       if (!command) {
-        await message.reply(╭─⌾${applyFont("ERROR")}⋅⌾──╮\n│\n│ ${applyFont("Command not found")}\n│\n╰─────────────⌾);
+        await message.reply(`Command "${commandName}" not found.`);
       } else {
         const configCommand = command.config;
         const roleText = roleTextToString(configCommand.role);
         const author = configCommand.author || "Unknown";
-
-        const longDescription = configCommand.longDescription?.en || "No description";
+        const category = configCommand.category;
+        const longDescription = configCommand.longDescription ? configCommand.longDescription.en || "No description" : "No description";
         const guideBody = configCommand.guide?.en || "No guide available.";
         const usage = guideBody.replace(/{p}/g, prefix).replace(/{n}/g, configCommand.name);
 
-        const response = `╭─⌾${applyFont("COMMAND INFO")}⋅⌾──╮
-│
-│ ${applyFont("NAME")}: ${configCommand.name}
-│ ${applyFont("VERSION")}: ${configCommand.version || "1.0"}
-│ ${applyFont("AUTHOR")}: ${applyFont(author)}
-│
-│ ${applyFont("DESCRIPTION")}:
-│ ${longDescription}
-│
-│ ${applyFont("USAGE")}:
-│ ${usage}
-│
-│ ${applyFont("ALIASES")}: ${configCommand.aliases ? configCommand.aliases.map(a => applyFont(a)).join(", ") : "None"}
-│ ${applyFont("ROLE")}: ${roleText}
-│ ${applyFont("COOLDOWN")}: ${configCommand.countDown || 2}s
-│
-╰─────────────⌾`;
+        const response = `╭─❍ ᏦᎽᎾᎿᎯᏦᎯ ❍─╮      
+
+❐𝙉𝙖𝙢𝙚 ➢ ${configCommand.name}
+❐𝙊𝙩𝙝𝙚𝙧𝙉𝙖𝙢𝙚 ➢ ${configCommand.aliases ? configCommand.aliases.join(", ") : "Do not have"}
+❐𝘾𝙖𝙩𝙚𝙜𝙤𝙧𝙮 ➢ ${category}
+
+❑𝘾𝙢𝙙_𝙈𝙖𝙠𝙚𝙧 ➢ ${author}
+
+❒𝙍𝙤𝙡𝙚 ➢ ${roleText}
+❒𝙏𝙞𝙢𝙚 𝙥𝙚𝙧 𝙘𝙢𝙙 ➢ ${configCommand.countDown || 1}s
+❒𝘿𝙚𝙨𝙘𝙧𝙞𝙥𝙩𝙞𝙤𝙉 ➢ ${longDescription}
+❒𝙐𝙨𝙖𝙜𝙚 ➢ ${usage}
+╰─────────────────────╯`;
 
         await message.reply(response);
       }
     }
-  }
+  },
 };
 
 function roleTextToString(roleText) {
   switch (roleText) {
-    case 0: return applyFont("All users");
-    case 1: return applyFont("Group admins");
-    case 2: return applyFont("Bot admins");
-    default: return applyFont("Unknown");
+    case 0:
+      return "0 (All users)";
+    case 1:
+      return "1 (Group administrators)";
+    case 2:
+      return "2 (Admin bot)";
+    default:
+      return "Unknown role";
   }
 }
