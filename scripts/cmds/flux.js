@@ -6,7 +6,7 @@ module.exports = {
     name: "flux",
     aliases: ["ff"],
     version: "1.5",
-    author: "Samir Œ || Modified By Mariancross",
+    author: "Dan jersey",
     countDown: 5,
     role: 0,
     shortDescription: "Générateur d'images via l'API Fluxpro",
