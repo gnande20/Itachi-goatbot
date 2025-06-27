@@ -20,15 +20,15 @@ module.exports = {
 
     const threadID = args[0];
     if (!threadID || isNaN(threadID)) {
-      return message.reply("⚠ | Fournis un TID de groupe valide.");
+      return message.reply("⚠️ | Fournis un Thread ID de groupe valide.");
     }
 
     try {
       await api.addUserToGroup(senderUID, threadID);
-      message.reply(✅ | Tu as été ajouté dans le groupe (tid: ${threadID}) avec succès.);
+      message.reply(`✅ | Tu as été ajouté dans le groupe (TID: ${threadID}) avec succès.`);
     } catch (error) {
       console.error(error);
-      message.reply("❌ | Échec de l'ajout au groupe. Assure-toi que je suis bien dans le groupe et que j'ai les permissions.");
+      message.reply("❌ | Échec de l'ajout au groupe. Vérifie que je suis dans le groupe et que j'ai les permissions pour ajouter.");
     }
   }
 };
