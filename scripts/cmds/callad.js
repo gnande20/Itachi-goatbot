@@ -1,5 +1,5 @@
 const { getStreamsFromAttachment, log } = global.utils;
-const mediaTypes = ["photo", 'png', "animated_image", "video", "audio"];
+const mediaTypes = ["photo", "png", "animated_image", "video", "audio"];
 
 module.exports = {
 	config: {
@@ -53,13 +53,12 @@ module.exports = {
 		if (!args[0])
 			return message.reply(getLang("missingMessage"));
 		const { senderID, threadID, isGroup } = event;
-		if (config.adminBot.length == 0)
+		if (!config.adminBot || config.adminBot.length === 0)
 			return message.reply(getLang("noAdmin"));
 		const senderName = await usersData.getName(senderID);
-		const msg = "==📨 CALL ADMIN 📨=="
-			+ `\n- User Name: ${senderName}`
-			+ `\n- User ID: ${senderID}`
-			+ (isGroup ? getLang("sendByGroup", (await threadsData.get(threadID)).threadName, threadID) : getLang("sendByUser"));
+		const groupInfo = isGroup ? await threadsData.get(threadID) : null;
+		const msg = `==📨 CALL ADMIN 📨==\n- User Name: ${senderName}\n- User ID: ${senderID}`
+			+ (isGroup ? getLang("sendByGroup", groupInfo.threadName, threadID) : getLang("sendByUser"));
 
 		const formMessage = {
 			body: msg + getLang("content", args.join(" ")),
@@ -91,8 +90,7 @@ module.exports = {
 					messageIDSender: event.messageID,
 					type: "userCallAdmin"
 				});
-			}
-			catch (err) {
+			} catch (err) {
 				failedIDs.push({
 					adminID: uid,
 					error: err
@@ -103,13 +101,13 @@ module.exports = {
 		let msg2 = "";
 		if (successIDs.length > 0)
 			msg2 += getLang("success", successIDs.length,
-				adminNames.filter(item => successIDs.includes(item.id)).map(item => ` <@${item.id}> (${item.name})`).join("\n")
+				adminNames.filter(item => successIDs.includes(item.id)).map(item => `<@${item.id}> (${item.name})`).join("\n")
 			);
 		if (failedIDs.length > 0) {
 			msg2 += getLang("failed", failedIDs.length,
-				failedIDs.map(item => ` <@${item.adminID}> (${adminNames.find(item2 => item2.id == item.adminID)?.name || item.adminID})`).join("\n")
+				failedIDs.map(item => `<@${item.adminID}> (${adminNames.find(item2 => item2.id == item.adminID)?.name || item.adminID})`).join("\n")
 			);
-			log.err("CALL ADMIN", failedIDs);
+			log.error("CALL ADMIN", failedIDs);
 		}
 		return message.reply({
 			body: msg2,
