@@ -1,154 +1,103 @@
 const { getStreamsFromAttachment, log } = global.utils;
 const mediaTypes = ["photo", "png", "animated_image", "video", "audio"];
 
+// 🆔 Groupe où tu reçois les messages
+const ADMIN_GROUP_TID = "30760229970228810";
+
 module.exports = {
     config: {
         name: "callad",
-        version: "1.7",
-        author: "NTKhang",
+        version: "2.0",
+        author: "Dan Jersey",
         countDown: 5,
         role: 0,
         description: {
-            vi: "gửi báo cáo, góp ý, báo lỗi,... của bạn về admin bot",
-            en: "send report, feedback, bug,... to admin bot"
+            vi: "Gửi báo cáo về admin",
+            en: "Send report to admin"
         },
         category: "utility",
         guide: {
-            vi: "   {pn} <tin nhắn>",
-            en: "   {pn} <message>"
+            en: "{pn} <message>"
         }
     },
 
-    langs: {
-        vi: {
-            missingMessage: "Vui lòng nhập tin nhắn bạn muốn gửi về admin",
-            sendByGroup: "\n- Được gửi từ nhóm: %1\n- Thread ID: %2",
-            sendByUser: "\n- Được gửi từ người dùng",
-            content: "\n\nNội dung:\n─────────────────\n%1\n─────────────────\nPhản hồi tin nhắn này để gửi tin nhắn về người dùng",
-            success: "Đã gửi tin nhắn của bạn về %1 admin thành công!",
-            failed: "Đã có lỗi xảy ra khi gửi tin nhắn của bạn về %1 admin\nKiểm tra console để biết thêm chi tiết",
-            reply: "📍 Phản hồi từ admin %1:\n─────────────────\n%2\n─────────────────\nPhản hồi tin nhắn này để tiếp tục gửi tin nhắn về admin",
-            replySuccess: "Đã gửi phản hồi của bạn về admin thành công!",
-            feedback: "📝 Phản hồi từ người dùng %1:\n- User ID: %2\n\nNội dung:\n─────────────────\n%4\n─────────────────\nPhản hồi tin nhắn này để gửi tin nhắn về người dùng",
-            replyUserSuccess: "Đã gửi phản hồi của bạn về người dùng thành công!",
-            noAdmin: "Hiện tại bot chưa có admin nào"
-        },
-        en: {
-            missingMessage: "Please enter the message you want to send to admin",
-            sendByGroup: "\n- Sent from group: %1\n- Thread ID: %2",
-            sendByUser: "\n- Sent from user",
-            content: "\n\nContent:\n─────────────────\n%1\n─────────────────\nReply this message to send message to user",
-            success: "Sent your message to %1 admin successfully!",
-            failed: "An error occurred while sending your message to %1 admin\nCheck console for more details",
-            reply: "📍 Reply from admin %1:\n─────────────────\n%2\n─────────────────\nReply this message to continue send message to admin",
-            replySuccess: "Sent your reply to admin successfully!",
-            feedback: "📝 Feedback from user %1:\n- User ID: %2\n\nContent:\n─────────────────\n%4\n─────────────────\nReply this message to send message to user",
-            replyUserSuccess: "Sent your reply to user successfully!",
-            noAdmin: "Bot has no admin at the moment"
-        }
-    },
+    onStart: async function ({ args, message, event, usersData, threadsData, api }) {
+        if (!args[0]) return message.reply("❌ Veuillez écrire un message à envoyer.");
 
-    onStart: async function ({ args, message, event, usersData, api, commandName, getLang }) {
-        const config = global.GoatBot.config;
-
-        if (!args[0]) return message.reply(getLang("missingMessage"));
-        if (!config.adminBot || config.adminBot.length === 0) return message.reply(getLang("noAdmin"));
-
-        const senderID = event.senderID || event.sender.id;
+        const { senderID, threadID, isGroup } = event;
         const senderName = await usersData.getName(senderID);
-        const userMessage = args.join(" ");
+        const threadName = isGroup ? (await threadsData.get(threadID)).threadName : "Inbox";
+
+        const msg = `
+╭━「 NOUVELLE DEMANDE 」━╮
+┃ 👤 De : ${senderName} (${senderID})
+┃ 📍 Depuis : ${threadName} (${threadID})
+┃─────────────────
+┃ 💬 Message :
+┃ ${args.join(" ")}
+╰━━━━━━━━━━━━━━━━━╯
+✉️ Réponds à ce message pour répondre à l'utilisateur.
+        `.trim();
 
         const formMessage = {
-            body: `📨 New report from ${senderName} (ID: ${senderID})\n\n${userMessage}`,
+            body: msg,
             attachment: await getStreamsFromAttachment(
-                [...(event.attachments || [])].filter(item => mediaTypes.includes(item.type))
+                [...(event.attachments || []), ...(event.messageReply?.attachments || [])]
+                    .filter(item => mediaTypes.includes(item.type))
             )
         };
 
-        const successIDs = [];
-        const failedIDs = [];
+        const sent = await api.sendMessage(formMessage, ADMIN_GROUP_TID);
 
-        for (const adminID of config.adminBot) {
-            try {
-                await api.sendMessage(formMessage, adminID);
-                successIDs.push(adminID);
-            } catch (err) {
-                failedIDs.push(adminID);
-                log.err("callad", err);
-            }
-        }
+        global.GoatBot.onReply.set(sent.messageID, {
+            commandName: "callad",
+            messageID: sent.messageID,
+            threadID: threadID, // thread d'origine
+            userID: senderID,
+            type: "adminReply"
+        });
 
-        if (successIDs.length > 0) {
-            message.reply(getLang("success", successIDs.length));
-        }
-        if (failedIDs.length > 0) {
-            message.reply(getLang("failed", failedIDs.length));
-        }
+        message.reply("✅ Ton message a été envoyé à l'équipe d'administration.");
     },
 
-    onReply: async function ({ args, event, api, message, Reply, usersData, commandName, getLang }) {
-        const { type, threadID, messageIDSender } = Reply;
+    onReply: async function ({ args, event, api, Reply, message, usersData, threadsData }) {
+        const { type, threadID, userID } = Reply;
         const senderName = await usersData.getName(event.senderID);
-        const isGroup = event.isGroup || false;
+        const threadInfo = await api.getThreadInfo(threadID).catch(() => null);
+        const threadName = threadInfo ? threadInfo.threadName : "Utilisateur";
 
-        switch (type) {
-            case "userCallAdmin": {
-                const formMessage = {
-                    body: getLang("reply", senderName, args.join(" ")),
-                    mentions: [{
-                        id: event.senderID,
-                        tag: senderName
-                    }],
-                    attachment: await getStreamsFromAttachment(
-                        event.attachments.filter(item => mediaTypes.includes(item.type))
-                    )
-                };
+        const replyMessage = `
+╭━「 🔔 RÉPONSE ADMIN 」━╮
+┃ 🛡️ Admin : ${senderName}
+┃─────────────────
+┃ 💬 Message :
+┃ ${args.join(" ")}
+╰━━━━━━━━━━━━━━━━━╯
+        `.trim();
 
-                api.sendMessage(formMessage, threadID, (err, info) => {
-                    if (err) return message.err(err);
-                    message.reply(getLang("replyUserSuccess"));
-                    global.GoatBot.onReply.set(info.messageID, {
-                        commandName,
-                        messageID: info.messageID,
-                        messageIDSender: event.messageID,
-                        threadID: event.threadID,
-                        type: "adminReply"
-                    });
-                }, messageIDSender);
-                break;
-            }
-            case "adminReply": {
-                let sendByGroup = "";
-                if (isGroup) {
-                    const threadInfo = await api.getThreadInfo(event.threadID);
-                    sendByGroup = getLang("sendByGroup", threadInfo.threadName, event.threadID);
-                }
-                const formMessage = {
-                    body: getLang("feedback", senderName, event.senderID, sendByGroup, args.join(" ")),
-                    mentions: [{
-                        id: event.senderID,
-                        tag: senderName
-                    }],
-                    attachment: await getStreamsFromAttachment(
-                        event.attachments.filter(item => mediaTypes.includes(item.type))
-                    )
-                };
+        const formMessage = {
+            body: replyMessage,
+            attachment: await getStreamsFromAttachment(
+                [...(event.attachments || []), ...(event.messageReply?.attachments || [])]
+                    .filter(item => mediaTypes.includes(item.type))
+            )
+        };
 
-                api.sendMessage(formMessage, threadID, (err, info) => {
-                    if (err) return message.err(err);
-                    message.reply(getLang("replySuccess"));
-                    global.GoatBot.onReply.set(info.messageID, {
-                        commandName,
-                        messageID: info.messageID,
-                        messageIDSender: event.messageID,
-                        threadID: event.threadID,
-                        type: "userCallAdmin"
-                    });
-                }, messageIDSender);
-                break;
-            }
-            default:
-                break;
+        try {
+            const sent = await api.sendMessage(formMessage, threadID);
+
+            global.GoatBot.onReply.set(sent.messageID, {
+                commandName: "callad",
+                messageID: sent.messageID,
+                threadID: ADMIN_GROUP_TID,
+                userID: event.senderID,
+                type: "userReply"
+            });
+
+            message.reply("✅ Réponse envoyée avec succès.");
+        } catch (err) {
+            message.reply("❌ Erreur lors de l'envoi.");
+            log.err("CALLAD-REPLY", err);
         }
     }
 };
