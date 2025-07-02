@@ -1,19 +1,19 @@
 const { getStreamsFromAttachment, log } = global.utils;
 const mediaTypes = ["photo", "png", "animated_image", "video", "audio"];
 
-// 🆔 Groupe où tu reçois les messages
+// 🆔 Groupe admin où tu reçois les messages
 const ADMIN_GROUP_TID = "30760229970228810";
 
 module.exports = {
     config: {
         name: "callad",
-        version: "2.0",
+        version: "3.1",
         author: "Dan Jersey",
         countDown: 5,
         role: 0,
         description: {
-            vi: "Gửi báo cáo về admin",
-            en: "Send report to admin"
+            en: "Send message to admin and chat",
+            vi: "Gửi báo cáo và trò chuyện với admin"
         },
         category: "utility",
         guide: {
@@ -26,17 +26,18 @@ module.exports = {
 
         const { senderID, threadID, isGroup } = event;
         const senderName = await usersData.getName(senderID);
-        const threadName = isGroup ? (await threadsData.get(threadID)).threadName : "Inbox";
+        const threadName = isGroup ? (await threadsData.get(threadID))?.threadName || "Groupe" : "Inbox";
 
         const msg = `
-╭「 NOUVELLE DEMANDE 」╮
-┃ 👤 De : ${senderName} (${senderID})
-┃ 📍 Depuis : ${threadName} (${threadID})
-┃─────────────────
-┃ 💬 Message :
-┃ ${args.join(" ")}
-╰━━━━━━━━━━━━━━━━━╯
-✉️ Réponds à ce message pour répondre à l'utilisateur.
+╔═╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌═╗
+║ 📥 NOUVELLE DEMANDE
+╟──────────────
+║ 👤 ${senderName} (${senderID})
+║ 📍 ${threadName} (${threadID})
+╟──────────────
+║ 💬 ${args.join(" ")}
+╚═╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌═╝
+✉ Réponds à ce message pour répondre à l'utilisateur.
         `.trim();
 
         const formMessage = {
@@ -52,52 +53,83 @@ module.exports = {
         global.GoatBot.onReply.set(sent.messageID, {
             commandName: "callad",
             messageID: sent.messageID,
-            threadID: threadID, // thread d'origine
             userID: senderID,
+            threadID: threadID,
             type: "adminReply"
         });
 
-        message.reply("✅ Ton message a été envoyé à l'équipe d'administration.");
+        message.reply("✅ Ton message a bien été transmis à l'administration.");
     },
 
     onReply: async function ({ args, event, api, Reply, message, usersData, threadsData }) {
-        const { type, threadID, userID } = Reply;
+        const { type, userID, threadID } = Reply;
         const senderName = await usersData.getName(event.senderID);
-        const threadInfo = await api.getThreadInfo(threadID).catch(() => null);
-        const threadName = threadInfo ? threadInfo.threadName : "Utilisateur";
 
-        const replyMessage = `
-╭「 🔔 RÉPONSE ADMIN 」╮
-┃ 🛡️ Admin : ${senderName}
-┃─────────────────
-┃ 💬 Message :
-┃ ${args.join(" ")}
-╰━━━━━━━━━━━━━━━━━╯
-        `.trim();
+        const attachments = await getStreamsFromAttachment(
+            [...(event.attachments || []), ...(event.messageReply?.attachments || [])]
+                .filter(item => mediaTypes.includes(item.type))
+        );
 
-        const formMessage = {
-            body: replyMessage,
-            attachment: await getStreamsFromAttachment(
-                [...(event.attachments || []), ...(event.messageReply?.attachments || [])]
-                    .filter(item => mediaTypes.includes(item.type))
-            )
-        };
+        if (type === "adminReply") {
+            // L'admin répond à l'utilisateur
+            const replyMessage = `
+╔═╌╌╌╌╌╌╌╌╌╌═╗
+║ 🛡️ RÉPONSE ADMIN
+╟──────────
+║ 👤 ${senderName}
+╟──────────
+║ 💬 ${args.join(" ")}
+╚═╌╌╌╌╌╌╌╌╌╌═╝
+            `.trim();
 
-        try {
-            const sent = await api.sendMessage(formMessage, threadID);
+            const sent = await api.sendMessage({
+                body: replyMessage,
+                attachment: attachments
+            }, threadID);
 
             global.GoatBot.onReply.set(sent.messageID, {
                 commandName: "callad",
                 messageID: sent.messageID,
-                threadID: ADMIN_GROUP_TID,
                 userID: event.senderID,
+                threadID: ADMIN_GROUP_TID,
                 type: "userReply"
             });
 
-            message.reply("✅ Réponse envoyée avec succès.");
-        } catch (err) {
-            message.reply("❌ Erreur lors de l'envoi.");
-            log.err("CALLAD-REPLY", err);
+            message.reply("✅ Réponse envoyée à l'utilisateur.");
+        }
+
+        if (type === "userReply") {
+            // L'utilisateur répond, ça revient à l'admin
+            const userName = await usersData.getName(userID);
+            const threadInfo = await threadsData.get(threadID);
+            const threadName = threadInfo?.threadName || "Groupe";
+
+            const replyMessage = `
+╔═╌╌╌╌╌╌╌╌╌╌═╗
+║ 📩 RÉPONSE USER
+╟──────────
+║ 👤 ${userName} (${userID})
+║ 📍 ${threadName} (${threadID})
+╟──────────
+║ 💬 ${args.join(" ")}
+╚═╌╌╌╌╌╌╌╌╌╌═╝
+✉ Réponds pour continuer.
+            `.trim();
+
+            const sent = await api.sendMessage({
+                body: replyMessage,
+                attachment: attachments
+            }, ADMIN_GROUP_TID);
+
+            global.GoatBot.onReply.set(sent.messageID, {
+                commandName: "callad",
+                messageID: sent.messageID,
+                userID: userID,
+                threadID: threadID,
+                type: "adminReply"
+            });
+
+            message.reply("✅ Réponse envoyée à l'admin.");
         }
     }
 };
