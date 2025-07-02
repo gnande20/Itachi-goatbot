@@ -29,7 +29,7 @@ module.exports = {
         const threadName = isGroup ? (await threadsData.get(threadID)).threadName : "Inbox";
 
         const msg = `
-╭━「 NOUVELLE DEMANDE 」━╮
+╭「 NOUVELLE DEMANDE 」╮
 ┃ 👤 De : ${senderName} (${senderID})
 ┃ 📍 Depuis : ${threadName} (${threadID})
 ┃─────────────────
@@ -67,7 +67,7 @@ module.exports = {
         const threadName = threadInfo ? threadInfo.threadName : "Utilisateur";
 
         const replyMessage = `
-╭━「 🔔 RÉPONSE ADMIN 」━╮
+╭「 🔔 RÉPONSE ADMIN 」╮
 ┃ 🛡️ Admin : ${senderName}
 ┃─────────────────
 ┃ 💬 Message :
