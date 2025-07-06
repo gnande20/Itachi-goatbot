@@ -5,7 +5,7 @@ const axios = require('axios');
 module.exports = {
   config: {
     name: "wcg",
-    version: "1.3",
+    version: "1.4",
     author: "Dan Jersey",
     countDown: 5,
     role: 0,
@@ -28,7 +28,7 @@ module.exports = {
     }
 
     const letter = getLetter();
-    games.set(t, { mode, letter, players: {}, active: true });
+    games.set(t, { mode, letter, players: {}, usedWords: new Set(), active: true });
 
     return message.reply(
 `╭⭓ MANCHE LANCÉE
@@ -57,19 +57,26 @@ ${board}
 ╰⭓───────────────`
       );
     }
+
     if (!word || word.includes(" ")) return;
     if (word[0] !== g.letter) return;
-    if (!(await isWordValid(word))) {
-      return message.reply(`✘ Le mot "${word}" n'existe pas en français`);
+
+    if (g.usedWords.has(word)) {
+      return message.reply(`✘ Le mot "${word}" a déjà été utilisé dans cette partie.`);
     }
 
+    if (!(await isWordValid(word))) {
+      return message.reply(`✘ Le mot "${word}" n'existe pas en français.`);
+    }
+
+    g.usedWords.add(word);
     g.players[uid] = (g.players[uid] || 0) + 200;
     const name = await usersData.getName(uid);
     const nl = getLetter(); g.letter = nl;
 
     return message.reply(
 `╭⭓ BIEN JOUÉ !
-┃ ✔ ${name}, +200 pts avec "${word}"
+┃ ✔ ${name}, +200 pts avec "${word}"
 ╰⭓──────────────
 
 ╭⭓ PROCHAIN MOT
@@ -87,7 +94,7 @@ function getLetter() {
 async function isWordValid(word) {
   try {
     const res = await axios.get(
-      `https://en.wiktionary.org/w/api.php?action=query&format=json&prop=extracts&titles=${encodeURIComponent(word)}`
+      `https://fr.wiktionary.org/w/api.php?action=query&format=json&prop=extracts&titles=${encodeURIComponent(word)}&origin=*`
     );
     const pages = res.data.query.pages;
     return !Object.keys(pages).includes("-1");
