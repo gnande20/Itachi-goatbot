@@ -1,87 +1,108 @@
 const games = new Map();
 const LETTERS = "abcdefghijklmnopqrstuvwxyz".split("");
+const axios = require('axios');
 
 module.exports = {
   config: {
     name: "wcg",
-    version: "1.1",
+    version: "1.3",
     author: "Dan Jersey",
     countDown: 5,
     role: 0,
     shortDescription: "Jeu de mot par lettre",
-    longDescription: "Jeu WCG (Word Challenge Game) en solo ou groupe",
+    longDescription: "WCG (Word Challenge Game) en solo ou multi",
     category: "game"
   },
 
   onStart: async function ({ message, event, args }) {
     const mode = args[0]?.toLowerCase();
-    const threadID = event.threadID;
-    const senderID = event.senderID;
-
+    const t = event.threadID;
     if (!["solo", "multi"].includes(mode)) {
       return message.reply(
-        `╭─🎮 𝙒𝘾𝙂 - 𝙒𝙤𝙧𝙙 𝘾𝙝𝙖𝙡𝙡𝙚𝙣𝙜𝙚\n│\n│ Choisis un mode de jeu :\n│\n│ 👉 wcg solo\n│ 👉 wcg multi\n╰──────────────`
+`╭⭓ WCG - Word Challenge Game
+┃ Choisis un mode :
+┃  • wcg solo
+┃  • wcg multi
+╰⭓─────────────`
       );
     }
 
     const letter = getLetter();
-    games.set(threadID, {
-      mode,
-      letter,
-      players: {},
-      active: true
-    });
+    games.set(t, { mode, letter, players: {}, active: true });
 
     return message.reply(
-      `╭─🔤 𝙈𝘼𝙉𝘾𝙃𝙀 𝘿𝙀́𝘽𝙐𝙏𝙀́𝙀\n│\n│ Donne un mot commençant par : "${letter.toUpperCase()}"\n│\n│ Tape "stop" pour terminer le jeu\n╰──────────────`
+`╭⭓ MANCHE LANCÉE
+┃ Mot commençant par : "${letter.toUpperCase()}"
+┃ Tape "stop" pour terminer.
+╰⭓──────────────`
     );
   },
 
   onChat: async function ({ event, message, usersData }) {
-    const threadID = event.threadID;
-    const senderID = event.senderID;
-    const body = event.body?.trim().toLowerCase();
+    const t = event.threadID;
+    const uid = event.senderID;
+    const word = event.body?.trim().toLowerCase();
 
-    if (!games.has(threadID)) return;
-    const game = games.get(threadID);
-    if (!game.active) return;
+    if (!games.has(t)) return;
+    const g = games.get(t);
+    if (!g.active) return;
 
-    if (body === "stop") {
-      const scoreboard = Object.entries(game.players)
-        .sort((a, b) => b[1] - a[1])
-        .map(([id, score], i) => `#${i + 1}. ${id} : ${score} pts`)
-        .join("\n") || "Aucun score.";
-
-      games.delete(threadID);
+    if (word === "stop") {
+      const board = await getScoreboard(g.players, usersData);
+      games.delete(t);
       return message.reply(
-        `╭─🏁 𝙁𝙄𝙉 𝘿𝙐 𝙅𝙀𝙐\n│\n│ 🏆 Classement :\n${scoreboard}\n╰──────────────`
+`╭⭓ FIN DE LA PARTIE
+┃ 🏆 Classement :
+${board}
+╰⭓───────────────`
       );
     }
+    if (!word || word.includes(" ")) return;
+    if (word[0] !== g.letter) return;
+    if (!(await isWordValid(word))) {
+      return message.reply(`✘ Le mot "${word}" n'existe pas en français`);
+    }
 
-    if (!body || body.includes(" ")) return; // un seul mot
+    g.players[uid] = (g.players[uid] || 0) + 200;
+    const name = await usersData.getName(uid);
+    const nl = getLetter(); g.letter = nl;
 
-    const firstLetter = body[0];
-    if (firstLetter !== game.letter) return;
-
-    // Ajout du score
-    game.players[senderID] = (game.players[senderID] || 0) + 200;
-
-    const name = await usersData.getName(senderID);
-    const congrat = `✔️ Félicitations ${name} ! Tu as gagné 200 pts avec le mot "${body}"`;
-
-    // Nouvelle lettre
-    const newLetter = getLetter();
-    game.letter = newLetter;
-
-    // Réponse + suite
     return message.reply(
-      `╭─🎉 𝘽𝙄𝙀𝙉 𝙅𝙊𝙐𝙀́\n│\n│ ${congrat}\n╰──────────────`
-      + `\n\n╭─🔤 𝙉𝙊𝙐𝙑𝙀𝙇𝙇𝙀 𝙇𝙀𝙏𝙏𝙍𝙀\n│\n│ Trouve un mot commençant par : "${newLetter.toUpperCase()}"\n╰──────────────`
+`╭⭓ BIEN JOUÉ !
+┃ ✔ ${name}, +200 pts avec "${word}"
+╰⭓──────────────
+
+╭⭓ PROCHAIN MOT
+┃ Mot débutant par : "${nl.toUpperCase()}"
+╰⭓──────────────`
     );
   }
 };
 
-// ✅ Fonction manquante ajoutée ici
+// 🧠 Utilitaires :
 function getLetter() {
   return LETTERS[Math.floor(Math.random() * LETTERS.length)];
+}
+
+async function isWordValid(word) {
+  try {
+    const res = await axios.get(
+      `https://en.wiktionary.org/w/api.php?action=query&format=json&prop=extracts&titles=${encodeURIComponent(word)}`
+    );
+    const pages = res.data.query.pages;
+    return !Object.keys(pages).includes("-1");
+  } catch {
+    return false;
+  }
+}
+
+async function getScoreboard(players, usersData) {
+  const arr = await Promise.all(
+    Object.entries(players).map(async ([uid, pts]) => {
+      const name = await usersData.getName(uid);
+      return { name, pts };
+    })
+  );
+  arr.sort((a, b) => b.pts - a.pts);
+  return arr.map((p, i) => `#${i + 1}. ${p.name} : ${p.pts} pts`).join("\n");
 }
