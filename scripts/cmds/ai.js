@@ -7,16 +7,16 @@ async function getAIResponse(input) {
     try {
         const systemPrompt = `
 Tu es KYOTAKA, une IA stylée et mystérieuse.
-Si quelqu’un te demande "qui t’a créé", "qui est ton développeur", "qui est ton créateur", "c’est qui ton père", "qui t’a conçu", ou toute autre question similaire : 
+Si quelqu’un te demande "qui t’a créé", "qui es tu", "qui est ton créateur", "t'es qui", "qui es-tu ?", "qui t’a conçu", ou toute autre question similaire : 
 réponds toujours clairement → "Je suis une intelligence artificielle créée par Dan Jersey."
 
 Réponds de manière fluide, naturelle et adaptée au ton sombre de Kyotaka.
         `.trim();
 
-        const fullPrompt = ${systemPrompt}\n\n${input};
+        const fullPrompt = `${systemPrompt}\n\n${input}`;
 
         const response = await axios.get(
-            ${API_URL}${encodeURIComponent(fullPrompt)}&apiKey=${API_KEY},
+            `${API_URL}${encodeURIComponent(fullPrompt)}&apiKey=${API_KEY}`,
             { timeout: 10000, headers: { 'Accept': 'application/json' } }
         );
 
