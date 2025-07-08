@@ -46,7 +46,7 @@ module.exports = {
         for (let i = 0; i < names.length; i++) {
           msg += `┃ ✦ ${names[i]}\n`;
         }
-        msg += `╰───────────────────╯\n`;
+        msg += `╰──────────────────╯\n`;
       });
 
       const totalCommands = commands.size;
