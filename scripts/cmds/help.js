@@ -31,7 +31,7 @@ module.exports = {
 
     if (args.length === 0) {
       const categories = {};
-      let msg = "\n\n╭━━⫷ KYOTAKA ┃ COMMANDES ⫸━━╮\n";
+      let msg = "\n\n╭━━⫷ KYOTAKA ┃ CMDS ⫸━━╮\n";
 
       for (const [name, value] of commands) {
         if (value.config.role > 1 && role < value.config.role) continue;
@@ -46,7 +46,7 @@ module.exports = {
         for (let i = 0; i < names.length; i++) {
           msg += `┃ ✦ ${names[i]}\n`;
         }
-        msg += `╰────────────────────────╯\n`;
+        msg += `╰───────────────────╯\n`;
       });
 
       const totalCommands = commands.size;
