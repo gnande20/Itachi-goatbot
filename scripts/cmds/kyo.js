@@ -48,16 +48,16 @@ module.exports = {
         if (cmd === 'on') {
             data[tid] = true;
             await fs.writeJson(activePath, data);
-            return message.reply("✅ Mode Kyotaka activé. Le bot répondra à tout ce que vous dites.");
+            return message.reply(`╭━━[ KYOTAKA ACTIVÉ ]━━╮\n┃\n┃ ✅ Mode sombre activé.\n┃ Je répondrai à tout ce que vous direz.\n┃\n╰━━━━━━━━━━━━━━━╯`);
         }
 
         if (cmd === 'off') {
             data[tid] = false;
             await fs.writeJson(activePath, data);
-            return message.reply("❌ Mode Kyotaka désactivé. Il ne répondra plus automatiquement.");
+            return message.reply(`╭━━[ KYOTAKA DÉSACTIVÉ ]━━╮\n┃\n┃ ❌ Mode désactivé.\n┃ Je ne répondrai plus automatiquement.\n┃\n╰━━━━━━━━━━━━━━━━╯`);
         }
 
-        return message.reply("Utilise :\n> kyo on — pour activer\n> kyo off — pour désactiver");
+        return message.reply(`╭━━[ KYOTAKA ]━━╮\n┃\n┃ Utilisation :\n┃ > kyo on  → Activer\n┃ > kyo off → Désactiver\n┃\n╰━━━━━━━━━━━━━━━╯`);
     },
 
     onChat: async function ({ event, message }) {
