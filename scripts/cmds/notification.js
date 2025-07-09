@@ -62,13 +62,13 @@ module.exports = {
     const notiText = getLang("notification");
 
     const fullMessage = [
-      "╭━━━━━━━━━━━━━━━━━━━━━━━━━━━━╮",
+      "╭━━━━━━━━━━━━━━━━━╮",
       "┃ ⚠ KYOTAKA - NOTIFICATION",
-      "┃━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "┃━━━━━━━━━━━━━━━━━━",
       ...wrapText(notiText).split("\n"),
-      "┃────────────────────────────",
+      "┃──────────────────",
       ...wrapText(userMessage).split("\n"),
-      "╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"
+      "╰━━━━━━━━━━━━━━━━━━╯"
     ].join("\n");
 
     const formSend = {
