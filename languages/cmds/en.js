@@ -79,8 +79,13 @@ module.exports = {
 	appstore: {
 		description: "Search app on appstore",
 		text: {
-			missingKeyword: "You haven't entered any keyword",
-			noResult: "No result found for keyword %1"
+			missingKeyword: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$",
+			noResult: "async function askGemini(prompt) {
+      const apiKey = 'AIzaSyAaZkM5zG11lrotfZfkKyts-TbKheHr05o'; // à sécuriser
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+      const body = {
+        contents: [{ parts: [{ text: prompt }] }]
+      };"
 		}
 	},
 	autosetname: {
