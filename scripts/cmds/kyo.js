@@ -9,7 +9,7 @@ if (!fs.existsSync(activePath)) fs.writeJsonSync(activePath, {});
 async function getAIResponse(input) {
     try {
         const res = await axios.get(`${API_URL}${encodeURIComponent(input)}`);
-        return res.data?.parts?.[0]?.reponse || res.data?.response || "Réponse non valide.";
+        return res.data?.message || res.data?.parts?.[0]?.reponse || res.data?.response || "Réponse non valide.";
     } catch {
         return "❌ Erreur de connexion à Kyotaka.";
     }
