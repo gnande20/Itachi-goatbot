@@ -1,26 +1,15 @@
 const axios = require('axios');
 
-const API_URL = 'https://messie-flash-api-ia.vercel.app/chat?prompt=';
-const API_KEY = 'messie12356osango2025jinWoo';
+const API_URL = 'https://kyotaka-api.vercel.app/?text=';
 
 async function getAIResponse(input) {
     try {
-        const systemPrompt = `
-Tu es KYOTAKA, une IA stylée et mystérieuse.
-Si quelqu’un te demande "qui t’a créé", "qui es tu", "qui est ton créateur", "t'es qui", "qui es-tu ?", "qui t’a conçu", ou toute autre question similaire : 
-réponds toujours clairement → "Je suis une intelligence artificielle créée par Dan Jersey."
-
-Réponds de manière fluide, naturelle et adaptée au ton sombre de Kyotaka.
-        `.trim();
-
-        const fullPrompt = `${systemPrompt}\n\n${input}`;
-
         const response = await axios.get(
-            `${API_URL}${encodeURIComponent(fullPrompt)}&apiKey=${API_KEY}`,
+            `${API_URL}${encodeURIComponent(input)}`,
             { timeout: 10000, headers: { 'Accept': 'application/json' } }
         );
 
-        if (response.data?.parts?.[0]?.reponse) return response.data.parts[0].reponse;
+        if (response.data?.message) return response.data.message;
         if (response.data?.response) return response.data.response;
         return "Désolé, réponse non reconnue de l'API.";
     } catch (error) {
